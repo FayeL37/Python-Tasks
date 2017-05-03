@@ -1,0 +1,61 @@
+import pandas as pd
+import time
+from datetime import date
+from datetime import datetime
+from matplotlib.finance import quotes_historical_yahoo_ochl
+import matplotlib.pyplot as plt
+
+start = datetime(2014,1,1)
+end = datetime(2014,12,31)
+quotesMSFT = quotes_historical_yahoo_ochl('MSFT', start, end)
+quotesINTC = quotes_historical_yahoo_ochl('INTC', start, end)
+fields = ['date', 'open', 'close','high', 'low','volume']
+list1 = []
+for i in xrange(len(quotesMSFT)):
+    x = date.fromordinal(int(quotesMSFT[i][0]))
+    y = datetime.strftime(x,'%Y-%m-%d')
+    list1.append(y)
+#print list1
+list2 = []
+for i in xrange(len(quotesINTC)):
+    x = date.fromordinal(int(quotesINTC[i][0]))
+    y = datetime.strftime(x,'%Y-%m-%d')
+    list2.append(y)
+#print list2
+quotesmsftdf = pd.DataFrame(quotesMSFT, index=list1, columns=fields)
+quotesmsftdf = quotesmsftdf.drop(['date'], axis = 1)
+#print quotesmsftdf
+quotesintcdf = pd.DataFrame(quotesINTC, index = list2, columns = fields)
+quotesintcdf = quotesintcdf.drop(['date'], axis = 1)
+#print quotesintcdf
+listtemp1 = []
+for i in xrange(len(quotesmsftdf)):
+    temp = time.strptime(quotesmsftdf.index[i],"%Y-%m-%d")
+    listtemp1.append(temp.tm_mon)
+#print listtemp1
+listtemp2 = []
+for i in xrange(len(quotesintcdf)):
+    temp = time.strptime(quotesintcdf.index[i],"%Y-%m-%d")
+    listtemp2.append(temp.tm_mon)
+    
+tempmsftdf = quotesmsftdf.copy()
+tempmsftdf['month'] = listtemp1
+closemaxMSFT = tempmsftdf.groupby('month').max().close
+print closemaxMSFT
+listMSFT = []
+for i in range(1,13):
+    listMSFT.append(closemaxMSFT[i])
+#print listMSFT
+listMSFTIndex = closemaxMSFT.index 
+
+tempintcdf = quotesintcdf.copy()
+tempintcdf['month'] = listtemp2
+closemaxINTC = tempintcdf.groupby('month').max().close
+listINTC = []
+for i in range(1,13):
+    listINTC.append(closemaxINTC[i])
+listINTCIndex = closemaxINTC.index 
+plt.subplot(211)
+plt.plot(listMSFTIndex,listMSFT,color='r',marker='o')
+plt.subplot(212)
+plt.plot(listINTCIndex,listINTC,color='g',marker='d')
